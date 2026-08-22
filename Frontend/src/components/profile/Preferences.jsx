@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useTrips } from '../../context/TripContext';
 import { useToast } from '../../context/ToastContext';
+import { userService } from '../../services/userService';
 import { Button } from '../common/Button';
 import { ConfirmDialog } from '../common/ConfirmDialog';
 import { CURRENCIES } from '../../utils/constants';
@@ -100,7 +101,7 @@ export const Preferences = () => {
       </div>
 
       {/* Regional Formats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
         <div className="form-group">
           <label className="form-label" htmlFor="pref-currency">
             Default Currency
@@ -131,6 +132,31 @@ export const Preferences = () => {
           >
             <option value="km">Kilometers (km)</option>
             <option value="miles">Miles (mi)</option>
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label className="form-label" htmlFor="pref-language">
+            Language
+          </label>
+          <select
+            id="pref-language"
+            className="form-select"
+            value={user?.language || 'en'}
+            onChange={async (e) => {
+              const newLang = e.target.value;
+              updateProfile({ language: newLang });
+              try {
+                await userService.changeLanguage(newLang).catch(() => {});
+              } catch (err) {
+                console.warn('Language sync error:', err);
+              }
+              addToast(`Language updated to ${newLang.toUpperCase()}`, 'info');
+            }}
+          >
+            <option value="en">English (en)</option>
+            <option value="hi">हिंदी (hi)</option>
+            <option value="gu">ગુજરાતી (gu)</option>
           </select>
         </div>
       </div>

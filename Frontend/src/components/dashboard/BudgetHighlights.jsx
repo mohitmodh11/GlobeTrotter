@@ -86,7 +86,7 @@ export const BudgetHighlights = () => {
             {formatCurrency(totalTargetBudget, 'INR')}
           </p>
           <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
-            Across {trips.length} active itineraries
+            Across {trips.length} travel plans
           </p>
         </div>
 

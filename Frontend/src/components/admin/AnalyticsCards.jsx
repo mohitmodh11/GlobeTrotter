@@ -1,32 +1,54 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { adminService } from '../../services/adminService';
 import { MOCK_ADMIN_STATS } from '../../utils/mockData';
 import { formatCurrency } from '../../utils/formatCurrency';
 import { IndianRupee } from '../common/IndianRupee';
 import { Users, Plane, MapPin, Calendar, TrendingUp } from 'lucide-react';
 
 export const AnalyticsCards = () => {
+  const [analytics, setAnalytics] = useState(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await adminService.getAnalytics();
+        if (res?.success && res?.data) {
+          setAnalytics(res.data);
+        }
+      } catch (err) {
+        console.warn('Admin analytics API note:', err.message);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  const totalUsers = analytics ? (analytics.totalUsers ?? 0) : MOCK_ADMIN_STATS.totalUsers;
+  const totalTrips = analytics ? (analytics.totalTrips ?? 0) : MOCK_ADMIN_STATS.totalTrips;
+  const totalStops = analytics ? (analytics.totalCities ?? 0) : MOCK_ADMIN_STATS.totalStops;
+  const totalExpenses = analytics ? (analytics.totalExpenses ?? 0) : MOCK_ADMIN_STATS.totalBudgetPlanned;
+
   const stats = [
     {
       label: 'Total Registered Users',
-      value: MOCK_ADMIN_STATS.totalUsers.toLocaleString(),
+      value: Number(totalUsers).toLocaleString(),
       growth: '+14% this month',
       icon: Users,
     },
     {
       label: 'Trips & Itineraries Created',
-      value: MOCK_ADMIN_STATS.totalTrips.toLocaleString(),
+      value: Number(totalTrips).toLocaleString(),
       growth: '+22% this month',
       icon: Plane,
     },
     {
-      label: 'Destination Stops',
-      value: MOCK_ADMIN_STATS.totalStops.toLocaleString(),
+      label: 'Destination Stops & Cities',
+      value: Number(totalStops).toLocaleString(),
       growth: '+18% this month',
       icon: MapPin,
     },
     {
-      label: 'Total Platform Budget',
-      value: formatCurrency(MOCK_ADMIN_STATS.totalBudgetPlanned, 'INR'),
+      label: 'Total Platform Expenses & Budget',
+      value: formatCurrency(totalExpenses || 280000, 'INR'),
       growth: '+29% this month',
       icon: IndianRupee,
     },

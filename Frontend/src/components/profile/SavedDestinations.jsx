@@ -64,11 +64,15 @@ export const SavedDestinations = () => {
                 flexDirection: 'column',
               }}
             >
-              <div style={{ height: '120px', position: 'relative' }}>
+              <div style={{ height: '120px', position: 'relative', backgroundColor: '#f1f5f9' }}>
                 <img
-                  src={city.image}
+                  src={city.image || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=800&q=80'}
                   alt={city.name}
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=800&q=80';
+                  }}
                 />
                 <button
                   onClick={() => handleRemove(city)}

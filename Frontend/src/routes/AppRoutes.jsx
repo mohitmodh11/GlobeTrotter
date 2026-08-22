@@ -69,7 +69,18 @@ export const AppRoutes = () => {
         <Route path="profile" element={<Profile />} />
 
         {/* Admin Dashboard */}
-        <Route path="admin" element={<AdminDashboard />} />
+        <Route
+          path="admin"
+          element={<Navigate to="/admin/dashboard" replace />}
+        />
+        <Route
+          path="admin/dashboard"
+          element={
+            <ProtectedRoute requireAdmin>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
 
         {/* 404 Inside Layout */}
         <Route path="*" element={<NotFound />} />

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../common/Button';
+import { UserAvatar } from '../common/UserAvatar';
 import {
   Compass,
   MapPin,
@@ -17,7 +18,7 @@ import {
 } from 'lucide-react';
 
 export const Navbar = () => {
-  const { user, logout, demoLogin } = useAuth();
+  const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -31,7 +32,7 @@ export const Navbar = () => {
   ];
 
   if (user?.role === 'admin') {
-    navLinks.push({ label: 'Admin', path: '/admin', icon: Shield });
+    navLinks.push({ label: 'Admin', path: '/admin/dashboard', icon: Shield });
   }
 
   const isActive = (path) => {
@@ -180,16 +181,7 @@ export const Navbar = () => {
                 }}
                 aria-expanded={isProfileMenuOpen}
               >
-                <img
-                  src={user.avatar}
-                  alt={user.name}
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '50%',
-                    objectFit: 'cover',
-                  }}
-                />
+                <UserAvatar user={user} size="sm" border={false} />
                 <span
                   style={{
                     fontSize: '0.875rem',
@@ -271,55 +263,7 @@ export const Navbar = () => {
                       <User size={16} /> Profile & Settings
                     </Link>
 
-                    {user.role !== 'admin' ? (
-                      <button
-                        onClick={() => {
-                          demoLogin('admin');
-                          setIsProfileMenuOpen(false);
-                        }}
-                        style={{
-                          width: '100%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '10px',
-                          padding: '8px 12px',
-                          borderRadius: '8px',
-                          fontSize: '0.875rem',
-                          color: '#15803d',
-                          border: 'none',
-                          background: 'none',
-                          cursor: 'pointer',
-                          textAlign: 'left',
-                        }}
-                        className="dropdown-item"
-                      >
-                        <Shield size={16} /> Switch to Admin Mode
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => {
-                          demoLogin('traveler');
-                          setIsProfileMenuOpen(false);
-                        }}
-                        style={{
-                          width: '100%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '10px',
-                          padding: '8px 12px',
-                          borderRadius: '8px',
-                          fontSize: '0.875rem',
-                          color: '#15803d',
-                          border: 'none',
-                          background: 'none',
-                          cursor: 'pointer',
-                          textAlign: 'left',
-                        }}
-                        className="dropdown-item"
-                      >
-                        <Compass size={16} /> Switch to Traveler Mode
-                      </button>
-                    )}
+
 
                     <div style={{ borderTop: '1px solid #f1f5f9', marginTop: '6px', paddingTop: '6px' }}>
                       <button

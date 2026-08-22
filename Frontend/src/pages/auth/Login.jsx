@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { authService } from '../../services/authService';
 import { Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
 import { Modal } from '../../components/common/Modal';
-import { Compass, Mail, Lock, LogIn, Sparkles, Shield, User } from 'lucide-react';
+import { Compass, Mail, Lock, LogIn, Sparkles, Shield, User, AlertCircle } from 'lucide-react';
 
 export const Login = () => {
   const { login, demoLogin } = useAuth();
@@ -36,11 +37,18 @@ export const Login = () => {
 
     setLoading(true);
     try {
-      await login(email, password);
+      const res = await login(email, password);
       addToast('Welcome back to GlobeTrotter!', 'success');
-      navigate(from, { replace: true });
-    } catch {
-      addToast('Failed to log in. Please check your credentials.', 'error');
+      const userRole = res?.user?.role;
+      if (userRole === 'admin') {
+        navigate('/admin/dashboard', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
+    } catch (err) {
+      const msg = err.message || 'Invalid username/email or password. Please verify or register an account.';
+      addToast(msg, 'error');
+      setErrors({ form: msg });
     } finally {
       setLoading(false);
     }
@@ -49,18 +57,27 @@ export const Login = () => {
   const handleDemoLogin = (role) => {
     demoLogin(role);
     addToast(`Logged in as Demo ${role === 'admin' ? 'Admin' : 'Traveler'}`, 'success');
-    navigate(role === 'admin' ? '/admin' : from, { replace: true });
+    if (role === 'admin') {
+      navigate('/admin/dashboard', { replace: true });
+    } else {
+      navigate('/dashboard', { replace: true });
+    }
   };
 
-  const handleResetPassword = (e) => {
+  const handleResetPassword = async (e) => {
     e.preventDefault();
     if (!resetEmail) {
       addToast('Please enter your email address', 'error');
       return;
     }
-    setIsForgotModalOpen(false);
-    addToast(`Password reset link sent to ${resetEmail}`, 'info');
-    setResetEmail('');
+    try {
+      await authService.forgotPassword(resetEmail);
+      setIsForgotModalOpen(false);
+      addToast(`Password reset link generated for ${resetEmail}`, 'success');
+      setResetEmail('');
+    } catch (err) {
+      addToast(err.message || 'Unable to request password reset', 'error');
+    }
   };
 
   return (
@@ -92,17 +109,38 @@ export const Login = () => {
           </p>
         </div>
 
+        {/* Error banner from backend */}
+        {errors.form && (
+          <div
+            style={{
+              padding: '12px 14px',
+              backgroundColor: '#fef2f2',
+              border: '1px solid #fecaca',
+              borderRadius: '8px',
+              color: '#b91c1c',
+              fontSize: '0.875rem',
+              marginBottom: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}
+          >
+            <AlertCircle size={18} style={{ flexShrink: 0 }} />
+            <span>{errors.form}</span>
+          </div>
+        )}
+
         {/* Form */}
         <form onSubmit={handleLogin}>
           <Input
-            label="Email Address"
+            label="Email Address or Username"
             id="login-email"
-            type="email"
+            type="text"
             placeholder="e.g. traveler@example.com"
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
-              if (errors.email) setErrors((prev) => ({ ...prev, email: '' }));
+              if (errors.email || errors.form) setErrors((prev) => ({ ...prev, email: '', form: '' }));
             }}
             error={errors.email}
             icon={Mail}
@@ -117,7 +155,7 @@ export const Login = () => {
             value={password}
             onChange={(e) => {
               setPassword(e.target.value);
-              if (errors.password) setErrors((prev) => ({ ...prev, password: '' }));
+              if (errors.password || errors.form) setErrors((prev) => ({ ...prev, password: '', form: '' }));
             }}
             error={errors.password}
             icon={Lock}

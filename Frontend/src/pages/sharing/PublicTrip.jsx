@@ -23,6 +23,9 @@ import {
   Send,
 } from 'lucide-react';
 
+import { shareService } from '../../services/shareService';
+import { normalizeTripFromApi } from '../../context/TripContext';
+
 export const PublicTrip = () => {
   const { shareCode } = useParams();
   const navigate = useNavigate();
@@ -31,7 +34,39 @@ export const PublicTrip = () => {
   const { addToast } = useToast();
 
   const [copiedLink, setCopiedLink] = useState(false);
-  const trip = getTripByShareCode(shareCode);
+  const [apiTrip, setApiTrip] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const localTrip = getTripByShareCode(shareCode);
+  const trip = localTrip || apiTrip;
+
+  React.useEffect(() => {
+    if (!localTrip && shareCode) {
+      const fetchPublic = async () => {
+        try {
+          setIsLoading(true);
+          const res = await shareService.getPublicTrip(shareCode);
+          if (res?.success && res?.data) {
+            const normalized = normalizeTripFromApi(res.data, res.data.stops, []);
+            setApiTrip(normalized);
+          }
+        } catch (err) {
+          console.warn('Public trip API error:', err.message);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchPublic();
+    }
+  }, [localTrip, shareCode]);
+
+  if (!trip && isLoading) {
+    return (
+      <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>
+        <p>Loading shared itinerary...</p>
+      </div>
+    );
+  }
 
   if (!trip) {
     return (
@@ -178,11 +213,15 @@ export const PublicTrip = () => {
           boxShadow: 'var(--shadow-card)',
         }}
       >
-        <div style={{ position: 'relative', height: '240px', width: '100%' }}>
+        <div style={{ position: 'relative', height: '240px', width: '100%', backgroundColor: '#0f172a' }}>
           <img
-            src={trip.coverImage}
+            src={trip.coverImage || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1000&q=80'}
             alt={trip.name}
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1000&q=80';
+            }}
           />
           <div
             style={{

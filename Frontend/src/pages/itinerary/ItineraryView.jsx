@@ -206,11 +206,15 @@ export const ItineraryView = () => {
           boxShadow: 'var(--shadow-card)',
         }}
       >
-        <div style={{ position: 'relative', height: '240px', width: '100%' }}>
+        <div style={{ position: 'relative', height: '240px', width: '100%', backgroundColor: '#0f172a' }}>
           <img
-            src={trip.coverImage}
+            src={trip.coverImage || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1000&q=80'}
             alt={trip.name}
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1000&q=80';
+            }}
           />
           <div
             style={{

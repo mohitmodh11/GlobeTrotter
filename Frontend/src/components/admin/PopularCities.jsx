@@ -1,8 +1,56 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { adminService } from '../../services/adminService';
 import { MOCK_ADMIN_STATS } from '../../utils/mockData';
-import { MapPin, TrendingUp } from 'lucide-react';
+import { MapPin, TrendingUp, Sparkles } from 'lucide-react';
 
 export const PopularCities = () => {
+  const [popularCities, setPopularCities] = useState(null);
+  const [popularActivities, setPopularActivities] = useState(null);
+
+  useEffect(() => {
+    const fetchAdminData = async () => {
+      try {
+        const [citiesRes, actRes] = await Promise.allSettled([
+          adminService.getPopularCities(),
+          adminService.getPopularActivities(),
+        ]);
+
+        if (citiesRes.status === 'fulfilled' && citiesRes.value?.success && citiesRes.value?.data?.length > 0) {
+          setPopularCities(citiesRes.value.data);
+        }
+
+        if (actRes.status === 'fulfilled' && actRes.value?.success && actRes.value?.data?.length > 0) {
+          setPopularActivities(actRes.value.data);
+        }
+      } catch (err) {
+        console.warn('Admin popular cities API note:', err.message);
+      }
+    };
+
+    fetchAdminData();
+  }, []);
+
+  const displayCities = popularCities && popularCities.length > 0
+    ? popularCities.map((c) => ({
+        name: c.name,
+        country: c.country,
+        tripsCount: c.trip_usage || c.popularity || 1,
+        growth: '+18% trend',
+      }))
+    : MOCK_ADMIN_STATS.popularDestinations;
+
+  const displayActivities = popularActivities && popularActivities.length > 0
+    ? popularActivities.slice(0, 5).map((a, idx, arr) => {
+        const total = arr.reduce((acc, curr) => acc + (curr.usage_count || 1), 0);
+        const pct = Math.round(((a.usage_count || 1) / (total || 1)) * 100);
+        return {
+          category: a.name || a.type,
+          percentage: pct || 20,
+          count: a.usage_count || 1,
+        };
+      })
+    : MOCK_ADMIN_STATS.activityCategories;
+
   return (
     <div
       style={{
@@ -32,7 +80,7 @@ export const PopularCities = () => {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {MOCK_ADMIN_STATS.popularDestinations.map((dest, idx) => (
+          {displayCities.map((dest, idx) => (
             <div
               key={idx}
               style={{
@@ -72,7 +120,7 @@ export const PopularCities = () => {
 
               <div style={{ textAlign: 'right' }}>
                 <span style={{ fontSize: '0.875rem', fontWeight: 800, color: '#0f172a' }}>
-                  {dest.tripsCount.toLocaleString()} trips
+                  {dest.tripsCount?.toLocaleString() || 1} {typeof dest.tripsCount === 'number' ? 'trips' : ''}
                 </span>
                 <p style={{ fontSize: '0.75rem', color: '#15803d', fontWeight: 700 }}>
                   {dest.growth}
@@ -101,10 +149,10 @@ export const PopularCities = () => {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          {MOCK_ADMIN_STATS.activityCategories.map((cat, idx) => (
+          {displayActivities.map((cat, idx) => (
             <div key={idx}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', marginBottom: '6px' }}>
-                <span style={{ fontWeight: 600, color: '#334155' }}>{cat.category}</span>
+                <span style={{ fontWeight: 600, color: '#334155', textTransform: 'capitalize' }}>{cat.category}</span>
                 <span style={{ fontWeight: 700, color: '#15803d' }}>
                   {cat.percentage}% ({cat.count.toLocaleString()})
                 </span>

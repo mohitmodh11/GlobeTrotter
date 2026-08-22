@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
-import { Compass, Mail, Lock, User, UserPlus, Sparkles } from 'lucide-react';
+import { Compass, Mail, Lock, User, UserPlus, Sparkles, AlertCircle } from 'lucide-react';
 
 export const Register = () => {
   const { signup, demoLogin } = useAuth();
@@ -39,8 +39,10 @@ export const Register = () => {
       await signup(name, email, password);
       addToast('Welcome to GlobeTrotter! Your account is ready.', 'success');
       navigate('/dashboard', { replace: true });
-    } catch {
-      addToast('Registration failed. Please try again.', 'error');
+    } catch (err) {
+      const msg = err.message || 'Registration failed. Please try again with a different email/username.';
+      addToast(msg, 'error');
+      setErrors({ form: msg });
     } finally {
       setLoading(false);
     }
@@ -75,6 +77,27 @@ export const Register = () => {
           </p>
         </div>
 
+        {/* Error banner from backend */}
+        {errors.form && (
+          <div
+            style={{
+              padding: '12px 14px',
+              backgroundColor: '#fef2f2',
+              border: '1px solid #fecaca',
+              borderRadius: '8px',
+              color: '#b91c1c',
+              fontSize: '0.875rem',
+              marginBottom: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}
+          >
+            <AlertCircle size={18} style={{ flexShrink: 0 }} />
+            <span>{errors.form}</span>
+          </div>
+        )}
+
         {/* Form */}
         <form onSubmit={handleRegister}>
           <Input
@@ -84,7 +107,7 @@ export const Register = () => {
             value={name}
             onChange={(e) => {
               setName(e.target.value);
-              if (errors.name) setErrors((prev) => ({ ...prev, name: '' }));
+              if (errors.name || errors.form) setErrors((prev) => ({ ...prev, name: '', form: '' }));
             }}
             error={errors.name}
             icon={User}
@@ -99,7 +122,7 @@ export const Register = () => {
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
-              if (errors.email) setErrors((prev) => ({ ...prev, email: '' }));
+              if (errors.email || errors.form) setErrors((prev) => ({ ...prev, email: '', form: '' }));
             }}
             error={errors.email}
             icon={Mail}
@@ -114,7 +137,7 @@ export const Register = () => {
             value={password}
             onChange={(e) => {
               setPassword(e.target.value);
-              if (errors.password) setErrors((prev) => ({ ...prev, password: '' }));
+              if (errors.password || errors.form) setErrors((prev) => ({ ...prev, password: '', form: '' }));
             }}
             error={errors.password}
             icon={Lock}
@@ -129,7 +152,7 @@ export const Register = () => {
             value={confirmPassword}
             onChange={(e) => {
               setConfirmPassword(e.target.value);
-              if (errors.confirmPassword) setErrors((prev) => ({ ...prev, confirmPassword: '' }));
+              if (errors.confirmPassword || errors.form) setErrors((prev) => ({ ...prev, confirmPassword: '', form: '' }));
             }}
             error={errors.confirmPassword}
             icon={Lock}

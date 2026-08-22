@@ -70,12 +70,16 @@ export const RecommendedDestinations = () => {
               }}
             >
               {/* Image */}
-              <div style={{ position: 'relative', height: '160px', width: '100%', overflow: 'hidden' }}>
+              <div style={{ position: 'relative', height: '160px', width: '100%', overflow: 'hidden', backgroundColor: '#f1f5f9' }}>
                 <img
-                  src={city.image}
+                  src={city.image || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=800&q=80'}
                   alt={city.name}
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   loading="lazy"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=800&q=80';
+                  }}
                 />
                 <button
                   onClick={(e) => {

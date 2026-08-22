@@ -1,20 +1,66 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { adminService } from '../../services/adminService';
 import { MOCK_ADMIN_STATS } from '../../utils/mockData';
 import { useToast } from '../../context/ToastContext';
 import { Button } from '../common/Button';
 import { formatDate } from '../../utils/dateUtils';
-import { Search, UserCheck, Shield, MoreHorizontal, UserX } from 'lucide-react';
+import { Search, UserCheck, Shield, Trash2 } from 'lucide-react';
 
 export const UserTable = () => {
   const { addToast } = useToast();
   const [users, setUsers] = useState(MOCK_ADMIN_STATS.recentUsers);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setIsLoading(true);
+        const res = await adminService.getUsers();
+        if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+          const mappedUsers = res.data.map((u) => ({
+            id: u.id,
+            name: u.name,
+            username: u.username,
+            email: u.email,
+            role: u.role === 'admin' ? 'Admin' : 'Traveler',
+            tripsCount: 1,
+            joinedDate: u.created_at || new Date().toISOString(),
+            status: 'Active',
+          }));
+          setUsers(mappedUsers);
+        }
+      } catch (err) {
+        console.warn('Admin users API note:', err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   const filteredUsers = users.filter((u) => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     return u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
   });
+
+  const handleDeleteUser = async (userId, userName) => {
+    if (!window.confirm(`Are you sure you want to remove user account for ${userName}?`)) {
+      return;
+    }
+
+    try {
+      if (typeof userId === 'number' || !isNaN(Number(userId))) {
+        await adminService.deleteUser(userId);
+      }
+      setUsers((prev) => prev.filter((u) => u.id !== userId));
+      addToast(`User ${userName} removed successfully`, 'success');
+    } catch (err) {
+      addToast(err.message || 'Failed to remove user', 'error');
+    }
+  };
 
   const handleToggleUserStatus = (userId) => {
     setUsers((prev) =>
@@ -77,7 +123,6 @@ export const UserTable = () => {
             <tr style={{ borderBottom: '2px solid #e2e8f0', color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase' }}>
               <th style={{ padding: '10px 12px' }}>Traveler / User</th>
               <th style={{ padding: '10px 12px' }}>Role</th>
-              <th style={{ padding: '10px 12px' }}>Trips Created</th>
               <th style={{ padding: '10px 12px' }}>Joined Date</th>
               <th style={{ padding: '10px 12px' }}>Status</th>
               <th style={{ padding: '10px 12px', textAlign: 'right' }}>Actions</th>
@@ -100,18 +145,15 @@ export const UserTable = () => {
                     style={{
                       fontSize: '0.75rem',
                       fontWeight: 600,
-                      backgroundColor: usr.role === 'Guide' ? '#f0fdf4' : '#f8fafc',
-                      color: usr.role === 'Guide' ? '#15803d' : '#475569',
+                      backgroundColor: usr.role === 'Admin' ? '#fef3c7' : '#f0fdf4',
+                      color: usr.role === 'Admin' ? '#b45309' : '#15803d',
                       padding: '2px 8px',
                       borderRadius: '4px',
-                      border: `1px solid ${usr.role === 'Guide' ? '#bbf7d0' : '#e2e8f0'}`,
+                      border: `1px solid ${usr.role === 'Admin' ? '#fde68a' : '#bbf7d0'}`,
                     }}
                   >
                     {usr.role}
                   </span>
-                </td>
-                <td style={{ padding: '12px', fontWeight: 600, color: '#0f172a' }}>
-                  {usr.tripsCount} trips
                 </td>
                 <td style={{ padding: '12px', color: '#64748b' }}>
                   {formatDate(usr.joinedDate)}
@@ -132,13 +174,24 @@ export const UserTable = () => {
                   </span>
                 </td>
                 <td style={{ padding: '12px', textAlign: 'right' }}>
-                  <Button
-                    variant={usr.status === 'Active' ? 'ghost' : 'outline'}
-                    size="sm"
-                    onClick={() => handleToggleUserStatus(usr.id)}
-                  >
-                    {usr.status === 'Active' ? 'Suspend' : 'Activate'}
-                  </Button>
+                  <div style={{ display: 'inline-flex', gap: '8px' }}>
+                    <Button
+                      variant={usr.status === 'Active' ? 'ghost' : 'outline'}
+                      size="sm"
+                      onClick={() => handleToggleUserStatus(usr.id)}
+                    >
+                      {usr.status === 'Active' ? 'Suspend' : 'Activate'}
+                    </Button>
+                    {usr.role !== 'Admin' && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        icon={Trash2}
+                        onClick={() => handleDeleteUser(usr.id, usr.name)}
+                        style={{ color: '#dc2626' }}
+                      />
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}

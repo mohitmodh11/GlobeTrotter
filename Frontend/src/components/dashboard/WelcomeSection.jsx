@@ -7,11 +7,15 @@ import { formatCurrency } from '../../utils/formatCurrency';
 import { IndianRupee } from '../common/IndianRupee';
 import { Plus, Plane, MapPin, Calendar, Sparkles } from 'lucide-react';
 
-export const WelcomeSection = ({ trips = [] }) => {
+export const WelcomeSection = ({ trips: propTrips }) => {
   const { user } = useAuth();
+  const { trips: contextTrips } = useTrips();
   const navigate = useNavigate();
 
-  // Aggregate stats
+  // Use live trips from TripContext if not provided in props
+  const trips = propTrips !== undefined ? propTrips : (contextTrips || []);
+
+  // Aggregate stats based on user's travel plans
   const totalTrips = trips.length;
   const totalStops = trips.reduce((acc, t) => acc + (t.stops?.length || 0), 0);
   const totalActivities = trips.reduce(
@@ -26,7 +30,7 @@ export const WelcomeSection = ({ trips = [] }) => {
   );
 
   const stats = [
-    { label: 'Active Itineraries', value: totalTrips, icon: Plane, color: '#15803d', bg: '#f0fdf4' },
+    { label: 'Travel Plans', value: totalTrips, icon: Plane, color: '#15803d', bg: '#f0fdf4' },
     { label: 'Destinations Visited', value: totalStops, icon: MapPin, color: '#15803d', bg: '#f0fdf4' },
     { label: 'Activities Planned', value: totalActivities, icon: Calendar, color: '#15803d', bg: '#f0fdf4' },
     {

@@ -481,9 +481,13 @@ export const CreateTripForm = ({ initialData, isEdit = false }) => {
               }}
             >
               <img
-                src={customCoverUrl.trim() || coverImage}
+                src={customCoverUrl.trim() || coverImage || 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1000&q=80'}
                 alt="Trip Cover Preview"
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1000&q=80';
+                }}
               />
               <span
                 style={{

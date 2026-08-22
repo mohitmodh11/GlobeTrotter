@@ -100,7 +100,7 @@ export const TripCard = ({ trip }) => {
         }}
       >
         <img
-          src={trip.coverImage}
+          src={trip.coverImage || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1000&q=80'}
           alt={trip.name}
           style={{
             width: '100%',
@@ -108,6 +108,10 @@ export const TripCard = ({ trip }) => {
             objectFit: 'cover',
           }}
           loading="lazy"
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1000&q=80';
+          }}
         />
 
         {/* Top Badges */}

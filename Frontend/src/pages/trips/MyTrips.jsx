@@ -231,7 +231,7 @@ export const MyTrips = () => {
                 onClick={() => navigate(`/trips/${trip.id}`)}
               >
                 <img
-                  src={trip.coverImage}
+                  src={trip.coverImage || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1000&q=80'}
                   alt={trip.name}
                   style={{
                     width: '100px',
@@ -239,6 +239,11 @@ export const MyTrips = () => {
                     borderRadius: '8px',
                     objectFit: 'cover',
                     flexShrink: 0,
+                    backgroundColor: '#f1f5f9',
+                  }}
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1000&q=80';
                   }}
                 />
                 <div style={{ flex: 1, minWidth: '200px' }}>
