@@ -1,23 +1,50 @@
 import db from "../db/index.js";
 
+const generateUsername = (email) => {
+  const base = email
+    .split("@")[0]
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+
+  let username = base || "user";
+  let counter = 1;
+
+  while (
+    db
+      .prepare(
+        `
+          SELECT id
+          FROM users
+          WHERE username = ?
+        `
+      )
+      .get(username)
+  ) {
+    username = `${base || "user"}${counter}`;
+    counter++;
+  }
+
+  return username;
+};
+
 export const createUser = (
   name,
-  username,
   email,
   password,
-  profileImage = null,
   role = "user"
 ) => {
+  const username = generateUsername(email);
+
   const stmt = db.prepare(`
     INSERT INTO users (
       name,
       username,
       email,
       password,
-      profile_image,
-      role
+      role,
+      profile_image
     )
-    VALUES (?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, NULL)
   `);
 
   const result = stmt.run(
@@ -25,7 +52,6 @@ export const createUser = (
     username,
     email,
     password,
-    profileImage,
     role
   );
 
@@ -35,7 +61,13 @@ export const createUser = (
 export const getUserById = (id) => {
   return db
     .prepare(`
-      SELECT id, name,username,email, role,language, profile_image, created_at, updated_at
+      SELECT
+        id,
+        name,
+        email,
+        role,
+        created_at,
+        updated_at
       FROM users
       WHERE id = ?
     `)
@@ -55,61 +87,59 @@ export const getUserByEmail = (email) => {
 export const getAllUsers = () => {
   return db
     .prepare(`
-      SELECT id, name,username, email, role, profile_image, created_at
+      SELECT
+        id,
+        name,
+        email,
+        role,
+        created_at
       FROM users
       ORDER BY created_at DESC
     `)
     .all();
 };
 
-export const updateUser = (id, name, email, profileImage = null) => {
+export const updateUser = (
+  id,
+  name,
+  email
+) => {
   db.prepare(`
     UPDATE users
-    SET name = ?,
-        email = ?,
-        profile_image = ?,
-        updated_at = CURRENT_TIMESTAMP
+    SET
+      name = ?,
+      email = ?,
+      updated_at = CURRENT_TIMESTAMP
     WHERE id = ?
-  `).run(name, email, profileImage, id);
+  `).run(
+    name,
+    email,
+    id
+  );
 
   return getUserById(id);
 };
 
 export const deleteUser = (id) => {
-  return db.prepare(`
-    DELETE FROM users
-    WHERE id = ?
-  `).run(id);
-};
-
-export const getUserByUsername = (username) => {
   return db
     .prepare(`
-      SELECT *
-      FROM users
-      WHERE username = ?
+      DELETE FROM users
+      WHERE id = ?
     `)
-    .get(username);
+    .run(id);
 };
 
-export const updateUserPassword = (id, hashedPassword) => {
-  db.prepare(`
-    UPDATE users
-    SET password = ?,
+export const updateUserPassword = (
+  id,
+  password
+) => {
+  return db
+    .prepare(`
+      UPDATE users
+      SET
+        password = ?,
         updated_at = CURRENT_TIMESTAMP
-    WHERE id = ?
-  `).run(hashedPassword, id);
-
-  return getUserById(id);
-};
-
-export const updateUserLanguage = (id, language) => {
-  db.prepare(`
-    UPDATE users
-    SET language = ?,
-        updated_at = CURRENT_TIMESTAMP
-    WHERE id = ?
-  `).run(language, id);
-
-  return getUserById(id);
+      WHERE id = ?
+    `)
+    .run(password, id);
 };
