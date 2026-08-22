@@ -12,6 +12,7 @@ db.exec(`
     email TEXT NOT NULL UNIQUE,
     password TEXT NOT NULL,
     role TEXT NOT NULL DEFAULT 'user',
+    language TEXT NOT NULL DEFAULT 'en',
     profile_image TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -130,6 +131,23 @@ db.exec(`
       REFERENCES trips(id)
       ON DELETE CASCADE
   );
+
+  CREATE TABLE IF NOT EXISTS saved_destinations (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  city_id INTEGER NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+  UNIQUE(user_id, city_id),
+
+  FOREIGN KEY (user_id)
+    REFERENCES users(id)
+    ON DELETE CASCADE,
+
+  FOREIGN KEY (city_id)
+    REFERENCES cities(id)
+    ON DELETE CASCADE
+);
 `);
 
 console.log("SQLite database initialized successfully");

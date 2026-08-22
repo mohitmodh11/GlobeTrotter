@@ -12,6 +12,7 @@ import expenseRoutes from "./routes/expense.routes.js";
 import itineraryRoutes from "./routes/itinerary.routes.js";
 import shareRoutes from "./routes/share.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
+import savedDestinationRoutes from "./routes/savedDestination.routes.js";
 
 const app = express();
 
@@ -51,6 +52,11 @@ app.use("/api", itineraryRoutes);
 app.use("/api", shareRoutes);
 
 app.use("/api/admin", adminRoutes);
+
+app.use(
+  "/api/saved-destinations",
+  savedDestinationRoutes
+);
 
 app.use((req, res) => {
   res.status(404).json({

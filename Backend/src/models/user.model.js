@@ -35,7 +35,7 @@ export const createUser = (
 export const getUserById = (id) => {
   return db
     .prepare(`
-      SELECT id, name,username,email, role, profile_image, created_at, updated_at
+      SELECT id, name,username,email, role,language, profile_image, created_at, updated_at
       FROM users
       WHERE id = ?
     `)
@@ -90,4 +90,26 @@ export const getUserByUsername = (username) => {
       WHERE username = ?
     `)
     .get(username);
+};
+
+export const updateUserPassword = (id, hashedPassword) => {
+  db.prepare(`
+    UPDATE users
+    SET password = ?,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `).run(hashedPassword, id);
+
+  return getUserById(id);
+};
+
+export const updateUserLanguage = (id, language) => {
+  db.prepare(`
+    UPDATE users
+    SET language = ?,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `).run(language, id);
+
+  return getUserById(id);
 };

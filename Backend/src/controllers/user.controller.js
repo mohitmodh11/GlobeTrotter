@@ -2,7 +2,9 @@ import {
   getUserById,
   updateUser,
   deleteUser,
+  updateUserLanguage,
 } from "../models/user.model.js";
+import { uploadToCloudinary } from "../utils/uploadToCloudinary.js";
 
 export const getProfile = (req, res) => {
   const user = getUserById(req.user.id);
@@ -20,26 +22,79 @@ export const getProfile = (req, res) => {
   });
 };
 
-export const updateProfile = (req, res) => {
-  const { name, email, profileImage } = req.body;
+export const updateProfile = async (req, res) => {
+  try {
+    const { name, email } = req.body;
 
-  if (!name || !email) {
+    if (!name || !email) {
+      return res.status(400).json({
+        success: false,
+        message: "Name and email are required.",
+      });
+    }
+
+    let profileImage = null;
+
+    if (req.file) {
+      const uploadResult = await uploadToCloudinary(
+        req.file.buffer,
+        "globetrotter/users"
+      );
+
+      profileImage = uploadResult.secure_url;
+    }
+
+    const currentUser = getUserById(req.user.id);
+
+    const updatedUser = updateUser(
+      req.user.id,
+      name,
+      email,
+      profileImage || currentUser.profile_image
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile updated successfully.",
+      data: updatedUser,
+    });
+  } catch (error) {
+    console.error("Update profile error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update profile.",
+    });
+  }
+};
+
+export const changeLanguage = (req, res) => {
+  const { language } = req.body;
+
+  const allowedLanguages = ["en", "hi", "gu"];
+
+  if (!language) {
     return res.status(400).json({
       success: false,
-      message: "Name and email are required.",
+      message: "Language is required.",
     });
   }
 
-  const user = updateUser(
+  if (!allowedLanguages.includes(language)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid language. Use en, hi or gu.",
+    });
+  }
+
+  const user = updateUserLanguage(
     req.user.id,
-    name,
-    email,
-    profileImage || null
+    language
   );
 
   return res.status(200).json({
     success: true,
-    message: "Profile updated successfully.",
+    message: "Language updated successfully.",
     data: user,
   });
 };

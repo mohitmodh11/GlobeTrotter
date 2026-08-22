@@ -1,10 +1,6 @@
-import {
-  getCityById,
-  saveSelectedCity,
-} from "../models/city.model.js";
+import { getCityById, saveSelectedCity } from "../models/city.model.js";
 
 export const searchCity = async (req, res) => {
-  
   try {
     const { q } = req.query;
 
@@ -33,7 +29,27 @@ export const searchCity = async (req, res) => {
 
     const result = await response.json();
 
-    const cities = (result.results || []).map((city) => ({
+    let cities = result.results || [];
+
+    // Prefer India results
+    const indiaCities = cities.filter((city) => city.country_code === "IN");
+
+    if (indiaCities.length > 0) {
+      cities = indiaCities;
+    }
+
+    // Prefer exact city-name matches
+    const searchTerm = q.trim().toLowerCase();
+
+    const exactMatches = cities.filter(
+      (city) => city.name.toLowerCase() === searchTerm
+    );
+
+    if (exactMatches.length > 0) {
+      cities = exactMatches;
+    }
+
+    cities = cities.map((city) => ({
       id: city.id,
       name: city.name,
       country: city.country,
@@ -97,8 +113,7 @@ export const saveCity = (req, res) => {
     ) {
       return res.status(400).json({
         success: false,
-        message:
-          "Name, country, latitude and longitude are required.",
+        message: "Name, country, latitude and longitude are required.",
       });
     }
 
