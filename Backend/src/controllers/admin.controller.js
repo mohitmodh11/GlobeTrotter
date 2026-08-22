@@ -2,39 +2,49 @@ import db from "../db/index.js";
 
 export const getAnalytics = (req, res) => {
   const totalUsers = db
-    .prepare(`
+    .prepare(
+      `
       SELECT COUNT(*) AS count
       FROM users
       WHERE role = 'user'
-    `)
+    `
+    )
     .get();
 
   const totalTrips = db
-    .prepare(`
+    .prepare(
+      `
       SELECT COUNT(*) AS count
       FROM trips
-    `)
+    `
+    )
     .get();
 
   const totalCities = db
-    .prepare(`
+    .prepare(
+      `
       SELECT COUNT(*) AS count
       FROM cities
-    `)
+    `
+    )
     .get();
 
   const totalActivities = db
-    .prepare(`
+    .prepare(
+      `
       SELECT COUNT(*) AS count
       FROM activities
-    `)
+    `
+    )
     .get();
 
   const totalExpenses = db
-    .prepare(`
+    .prepare(
+      `
       SELECT COALESCE(SUM(amount), 0) AS total
       FROM expenses
-    `)
+    `
+    )
     .get();
 
   return res.status(200).json({
@@ -51,16 +61,20 @@ export const getAnalytics = (req, res) => {
 
 export const getUsers = (req, res) => {
   const users = db
-    .prepare(`
+    .prepare(
+      `
       SELECT
-        id,
-        name,
-        email,
-        role,
-        created_at
-      FROM users
+  id,
+  name,
+  username,
+  email,
+  role,
+  profile_image,
+  created_at
+FROM users
       ORDER BY created_at DESC
-    `)
+    `
+    )
     .all();
 
   return res.status(200).json({
@@ -74,10 +88,12 @@ export const deleteUserByAdmin = (req, res) => {
   const { userId } = req.params;
 
   const result = db
-    .prepare(`
+    .prepare(
+      `
       DELETE FROM users
       WHERE id = ? AND role != 'admin'
-    `)
+    `
+    )
     .run(userId);
 
   if (result.changes === 0) {
@@ -95,7 +111,8 @@ export const deleteUserByAdmin = (req, res) => {
 
 export const getPopularCities = (req, res) => {
   const cities = db
-    .prepare(`
+    .prepare(
+      `
       SELECT
         c.id,
         c.name,
@@ -108,7 +125,8 @@ export const getPopularCities = (req, res) => {
       GROUP BY c.id
       ORDER BY trip_usage DESC, c.popularity DESC
       LIMIT 10
-    `)
+    `
+    )
     .all();
 
   return res.status(200).json({
@@ -119,7 +137,8 @@ export const getPopularCities = (req, res) => {
 
 export const getPopularActivities = (req, res) => {
   const activities = db
-    .prepare(`
+    .prepare(
+      `
       SELECT
         a.id,
         a.name,
@@ -132,7 +151,8 @@ export const getPopularActivities = (req, res) => {
       GROUP BY a.id
       ORDER BY usage_count DESC
       LIMIT 10
-    `)
+    `
+    )
     .all();
 
   return res.status(200).json({
@@ -143,14 +163,16 @@ export const getPopularActivities = (req, res) => {
 
 export const getTripAnalytics = (req, res) => {
   const trips = db
-    .prepare(`
+    .prepare(
+      `
       SELECT
         DATE(created_at) AS date,
         COUNT(*) AS count
       FROM trips
       GROUP BY DATE(created_at)
       ORDER BY date ASC
-    `)
+    `
+    )
     .all();
 
   return res.status(200).json({

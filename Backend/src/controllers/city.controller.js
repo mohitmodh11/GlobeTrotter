@@ -1,4 +1,7 @@
-import { getCityById, createCity } from "../models/city.model.js";
+import {
+  getCityById,
+  saveSelectedCity,
+} from "../models/city.model.js";
 
 export const searchCity = async (req, res) => {
   
@@ -71,4 +74,56 @@ export const getCity = (req, res) => {
     success: true,
     data: city,
   });
+};
+
+export const saveCity = (req, res) => {
+  try {
+    const {
+      name,
+      country,
+      countryCode,
+      state,
+      latitude,
+      longitude,
+      timezone,
+      population,
+    } = req.body;
+
+    if (
+      !name ||
+      !country ||
+      latitude === undefined ||
+      longitude === undefined
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Name, country, latitude and longitude are required.",
+      });
+    }
+
+    const city = saveSelectedCity(
+      name,
+      country,
+      countryCode || null,
+      state || null,
+      latitude,
+      longitude,
+      timezone || null,
+      population || 0
+    );
+
+    return res.status(201).json({
+      success: true,
+      message: "City saved successfully.",
+      data: city,
+    });
+  } catch (error) {
+    console.error("Save city error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to save city.",
+    });
+  }
 };

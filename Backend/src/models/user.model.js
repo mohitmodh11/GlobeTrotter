@@ -1,12 +1,33 @@
 import db from "../db/index.js";
 
-export const createUser = (name, email, password, role = "user") => {
+export const createUser = (
+  name,
+  username,
+  email,
+  password,
+  profileImage = null,
+  role = "user"
+) => {
   const stmt = db.prepare(`
-    INSERT INTO users (name, email, password, role)
-    VALUES (?, ?, ?, ?)
+    INSERT INTO users (
+      name,
+      username,
+      email,
+      password,
+      profile_image,
+      role
+    )
+    VALUES (?, ?, ?, ?, ?, ?)
   `);
 
-  const result = stmt.run(name, email, password, role);
+  const result = stmt.run(
+    name,
+    username,
+    email,
+    password,
+    profileImage,
+    role
+  );
 
   return getUserById(result.lastInsertRowid);
 };
@@ -14,7 +35,7 @@ export const createUser = (name, email, password, role = "user") => {
 export const getUserById = (id) => {
   return db
     .prepare(`
-      SELECT id, name, email, role, profile_image, created_at, updated_at
+      SELECT id, name,username,email, role, profile_image, created_at, updated_at
       FROM users
       WHERE id = ?
     `)
@@ -34,7 +55,7 @@ export const getUserByEmail = (email) => {
 export const getAllUsers = () => {
   return db
     .prepare(`
-      SELECT id, name, email, role, profile_image, created_at
+      SELECT id, name,username, email, role, profile_image, created_at
       FROM users
       ORDER BY created_at DESC
     `)
@@ -59,4 +80,14 @@ export const deleteUser = (id) => {
     DELETE FROM users
     WHERE id = ?
   `).run(id);
+};
+
+export const getUserByUsername = (username) => {
+  return db
+    .prepare(`
+      SELECT *
+      FROM users
+      WHERE username = ?
+    `)
+    .get(username);
 };
